@@ -1,0 +1,1571 @@
+<!doctype html>
+<html lang="id" class="h-full">
+ <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Algorithm Simulator - Visualisasi Algoritma Interaktif</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="/_sdk/data_sdk.js"></script>
+  <script src="/_sdk/element_sdk.js"></script>
+  <style>
+        body {
+            box-sizing: border-box;
+        }
+        
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        
+        .card-hover {
+            transition: all 0.3s ease;
+        }
+        
+        .card-hover:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+        
+        .algorithm-bar {
+            transition: all 0.4s ease;
+            border-radius: 4px 4px 0 0;
+        }
+        
+        .algorithm-bar.comparing {
+            background-color: #ef4444 !important;
+            transform: scale(1.1);
+        }
+        
+        .algorithm-bar.swapping {
+            background-color: #f59e0b !important;
+            transform: translateY(-10px);
+        }
+        
+        .algorithm-bar.sorted {
+            background-color: #10b981 !important;
+        }
+        
+        .algorithm-bar.current {
+            background-color: #8b5cf6 !important;
+            box-shadow: 0 0 20px rgba(139, 92, 246, 0.5);
+        }
+        
+        .pulse-animation {
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+        
+        .slide-in {
+            animation: slideIn 0.5s ease-out;
+        }
+        
+        @keyframes slideIn {
+            from { transform: translateX(-100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        
+        .fade-in {
+            animation: fadeIn 0.6s ease-out;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .code-display {
+            font-family: 'Courier New', monospace;
+            background: #1e1e1e;
+            color: #d4d4d4;
+            border-radius: 8px;
+            padding: 16px;
+            overflow-x: auto;
+        }
+        
+        .syntax-keyword { color: #569cd6; }
+        .syntax-string { color: #ce9178; }
+        .syntax-comment { color: #6a9955; }
+        .syntax-number { color: #b5cea8; }
+        
+        .stats-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .loading-spinner {
+            border: 3px solid #f3f4f6;
+            border-top: 3px solid #3b82f6;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+  <style>@view-transition { navigation: auto; }</style>
+ </head>
+ <body class="h-full bg-gray-50"><!-- Header -->
+  <header class="gradient-bg text-white shadow-lg">
+   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="flex justify-between items-center py-4">
+     <div class="flex items-center space-x-3">
+      <div class="w-12 h-12 bg-white rounded-lg flex items-center justify-center"><span class="text-2xl">🔬</span>
+      </div>
+      <div>
+       <h1 id="app-title" class="text-2xl font-bold">Algorithm Simulator</h1>
+       <p id="welcome-text" class="text-sm opacity-90">Visualisasi dan pelajari algoritma sorting &amp; searching</p>
+      </div>
+     </div>
+     <div class="flex items-center space-x-4">
+      <div class="bg-white bg-opacity-20 rounded-lg px-3 py-2"><span class="text-sm">Simulasi: </span> <span id="simulation-count" class="font-bold">0</span> <span class="text-yellow-300">⚡</span>
+      </div>
+     </div>
+    </div>
+   </div>
+  </header><!-- Main Content -->
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8"><!-- Algorithm Selection -->
+   <section class="mb-8 fade-in">
+    <div class="bg-white rounded-xl shadow-lg p-6">
+     <h2 class="text-2xl font-bold text-gray-800 mb-6">🎯 Pilih Algoritma</h2>
+     <div class="grid grid-cols-1 md:grid-cols-2 gap-6"><!-- Sorting Algorithms -->
+      <div>
+       <h3 id="sorting-title" class="text-lg font-semibold text-gray-700 mb-4">📊 Algoritma Sorting</h3>
+       <div class="space-y-2"><button onclick="selectAlgorithm('bubble')" id="btn-bubble" class="w-full text-left p-3 rounded-lg border-2 border-gray-200 hover:border-blue-500 hover:bg-blue-50 transition-colors">
+         <div class="font-medium">
+          Bubble Sort
+         </div>
+         <div class="text-sm text-gray-600">
+          Kompleksitas: O(n²) - Mudah dipahami
+         </div></button> <button onclick="selectAlgorithm('selection')" id="btn-selection" class="w-full text-left p-3 rounded-lg border-2 border-gray-200 hover:border-blue-500 hover:bg-blue-50 transition-colors">
+         <div class="font-medium">
+          Selection Sort
+         </div>
+         <div class="text-sm text-gray-600">
+          Kompleksitas: O(n²) - Minimal swaps
+         </div></button> <button onclick="selectAlgorithm('insertion')" id="btn-insertion" class="w-full text-left p-3 rounded-lg border-2 border-gray-200 hover:border-blue-500 hover:bg-blue-50 transition-colors">
+         <div class="font-medium">
+          Insertion Sort
+         </div>
+         <div class="text-sm text-gray-600">
+          Kompleksitas: O(n²) - Efisien untuk data kecil
+         </div></button> <button onclick="selectAlgorithm('merge')" id="btn-merge" class="w-full text-left p-3 rounded-lg border-2 border-gray-200 hover:border-blue-500 hover:bg-blue-50 transition-colors">
+         <div class="font-medium">
+          Merge Sort
+         </div>
+         <div class="text-sm text-gray-600">
+          Kompleksitas: O(n log n) - Divide &amp; conquer
+         </div></button> <button onclick="selectAlgorithm('quick')" id="btn-quick" class="w-full text-left p-3 rounded-lg border-2 border-gray-200 hover:border-blue-500 hover:bg-blue-50 transition-colors">
+         <div class="font-medium">
+          Quick Sort
+         </div>
+         <div class="text-sm text-gray-600">
+          Kompleksitas: O(n log n) - Sangat cepat
+         </div></button>
+       </div>
+      </div><!-- Searching Algorithms -->
+      <div>
+       <h3 id="searching-title" class="text-lg font-semibold text-gray-700 mb-4">🔍 Algoritma Searching</h3>
+       <div class="space-y-2"><button onclick="selectAlgorithm('linear')" id="btn-linear" class="w-full text-left p-3 rounded-lg border-2 border-gray-200 hover:border-green-500 hover:bg-green-50 transition-colors">
+         <div class="font-medium">
+          Linear Search
+         </div>
+         <div class="text-sm text-gray-600">
+          Kompleksitas: O(n) - Pencarian berurutan
+         </div></button> <button onclick="selectAlgorithm('binary')" id="btn-binary" class="w-full text-left p-3 rounded-lg border-2 border-gray-200 hover:border-green-500 hover:bg-green-50 transition-colors">
+         <div class="font-medium">
+          Binary Search
+         </div>
+         <div class="text-sm text-gray-600">
+          Kompleksitas: O(log n) - Untuk array terurut
+         </div></button> <button onclick="selectAlgorithm('jump')" id="btn-jump" class="w-full text-left p-3 rounded-lg border-2 border-gray-200 hover:border-green-500 hover:bg-green-50 transition-colors">
+         <div class="font-medium">
+          Jump Search
+         </div>
+         <div class="text-sm text-gray-600">
+          Kompleksitas: O(√n) - Lompatan optimal
+         </div></button> <button onclick="selectAlgorithm('interpolation')" id="btn-interpolation" class="w-full text-left p-3 rounded-lg border-2 border-gray-200 hover:border-green-500 hover:bg-green-50 transition-colors">
+         <div class="font-medium">
+          Interpolation Search
+         </div>
+         <div class="text-sm text-gray-600">
+          Kompleksitas: O(log log n) - Data terdistribusi uniform
+         </div></button>
+       </div>
+      </div>
+     </div>
+    </div>
+   </section><!-- Visualization Area -->
+   <section class="mb-8">
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6"><!-- Main Visualization -->
+     <div class="lg:col-span-2 bg-white rounded-xl shadow-lg p-6">
+      <div class="flex justify-between items-center mb-4">
+       <h3 class="text-xl font-bold text-gray-800">📈 Visualisasi</h3>
+       <div id="algorithm-info" class="text-sm text-gray-600">
+        Pilih algoritma untuk memulai
+       </div>
+      </div><!-- Array Input -->
+      <div class="mb-4"><label class="block text-sm font-medium text-gray-700 mb-2">Input Array (pisahkan dengan koma):</label>
+       <div class="flex space-x-2"><input type="text" id="array-input" class="flex-1 p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="64, 34, 25, 12, 22, 11, 90" value="64, 34, 25, 12, 22, 11, 90"> <button onclick="generateRandomArray()" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg transition-colors"> 🎲 Random </button>
+       </div>
+      </div><!-- Search Target (for search algorithms) -->
+      <div id="search-target-container" class="mb-4 hidden"><label class="block text-sm font-medium text-gray-700 mb-2">Nilai yang dicari:</label> <input type="number" id="search-target" class="w-32 p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="25">
+      </div><!-- Visualization Canvas -->
+      <div class="bg-gray-100 rounded-lg p-4 mb-4" style="height: 300px;">
+       <div id="visualization-area" class="h-full flex items-end justify-center space-x-1 overflow-x-auto"><!-- Bars will be generated here -->
+       </div>
+      </div><!-- Controls -->
+      <div class="flex flex-wrap gap-2 mb-4"><button onclick="startVisualization()" id="start-btn" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"> ▶️ Mulai </button> <button onclick="pauseVisualization()" id="pause-btn" class="bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed" disabled> ⏸️ Pause </button> <button onclick="resetVisualization()" id="reset-btn" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg transition-colors"> ⏹️ Reset </button> <button onclick="stepVisualization()" id="step-btn" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed" disabled> ⏭️ Step </button>
+      </div><!-- Speed Control -->
+      <div class="flex items-center space-x-4"><label class="text-sm font-medium text-gray-700">Kecepatan:</label> <input type="range" id="speed-slider" min="1" max="10" value="5" class="flex-1"> <span id="speed-value" class="text-sm text-gray-600 w-8">5</span>
+      </div>
+     </div><!-- Statistics & Code -->
+     <div class="space-y-6"><!-- Statistics -->
+      <div class="bg-white rounded-xl shadow-lg p-6">
+       <h4 class="text-lg font-semibold text-gray-800 mb-4">📊 Statistik</h4>
+       <div class="space-y-3">
+        <div class="stats-card rounded-lg p-3">
+         <div class="text-sm opacity-90">
+          Perbandingan
+         </div>
+         <div id="comparisons-count" class="text-2xl font-bold">
+          0
+         </div>
+        </div>
+        <div class="bg-green-500 text-white rounded-lg p-3">
+         <div class="text-sm opacity-90">
+          Pertukaran
+         </div>
+         <div id="swaps-count" class="text-2xl font-bold">
+          0
+         </div>
+        </div>
+        <div class="bg-purple-500 text-white rounded-lg p-3">
+         <div class="text-sm opacity-90">
+          Waktu (ms)
+         </div>
+         <div id="execution-time" class="text-2xl font-bold">
+          0
+         </div>
+        </div>
+       </div>
+      </div><!-- Algorithm Complexity -->
+      <div class="bg-white rounded-xl shadow-lg p-6">
+       <h4 class="text-lg font-semibold text-gray-800 mb-4">⚡ Kompleksitas</h4>
+       <div id="complexity-info" class="space-y-2 text-sm">
+        <div>
+         Pilih algoritma untuk melihat kompleksitas
+        </div>
+       </div>
+      </div><!-- Algorithm Description -->
+      <div class="bg-white rounded-xl shadow-lg p-6">
+       <h4 class="text-lg font-semibold text-gray-800 mb-4">📝 Deskripsi</h4>
+       <div id="algorithm-description" class="text-sm text-gray-600">
+        Pilih algoritma untuk melihat penjelasan cara kerjanya.
+       </div>
+      </div>
+     </div>
+    </div>
+   </section><!-- Code Display -->
+   <section class="mb-8">
+    <div class="bg-white rounded-xl shadow-lg p-6">
+     <h3 class="text-xl font-bold text-gray-800 mb-4">💻 Implementasi Kode</h3>
+     <div class="mb-4"><select id="language-select" class="p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"> <option value="python">Python</option> <option value="javascript">JavaScript</option> <option value="java">Java</option> <option value="cpp">C++</option> </select>
+     </div>
+     <div id="code-display" class="code-display">
+      <pre><code id="code-content">// Pilih algoritma untuk melihat implementasi kode</code></pre>
+     </div>
+    </div>
+   </section><!-- History -->
+   <section>
+    <div class="bg-white rounded-xl shadow-lg p-6">
+     <div class="flex justify-between items-center mb-4">
+      <h3 class="text-xl font-bold text-gray-800">📋 Riwayat Simulasi</h3><button onclick="clearHistory()" class="text-red-500 hover:text-red-700 text-sm"> 🗑️ Hapus Semua </button>
+     </div>
+     <div id="history-list" class="space-y-3"><!-- History items will be populated here -->
+     </div>
+    </div>
+   </section>
+  </main><!-- Toast Notification -->
+  <div id="toast" class="fixed bottom-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg transform translate-y-full transition-transform duration-300 z-50"><span id="toast-message">Notifikasi</span>
+  </div>
+  <script>
+        // Configuration and Data Management
+        const defaultConfig = {
+            app_title: "Algorithm Simulator",
+            welcome_text: "Visualisasi dan pelajari algoritma sorting & searching",
+            sorting_title: "📊 Algoritma Sorting",
+            searching_title: "🔍 Algoritma Searching",
+            background_color: "#f9fafb",
+            surface_color: "#ffffff",
+            text_color: "#1f2937",
+            primary_action_color: "#3b82f6",
+            secondary_action_color: "#6b7280",
+            font_family: "Inter",
+            font_size: 16
+        };
+
+        let currentData = [];
+        let currentAlgorithm = null;
+        let visualizationArray = [];
+        let originalArray = [];
+        let isAnimating = false;
+        let isPaused = false;
+        let animationSpeed = 500;
+        let currentStep = 0;
+        let totalSteps = 0;
+        let statistics = {
+            comparisons: 0,
+            swaps: 0,
+            executionTime: 0
+        };
+
+        // Data SDK Handler
+        const dataHandler = {
+            onDataChanged(data) {
+                currentData = data;
+                updateHistoryDisplay();
+                updateSimulationCount();
+            }
+        };
+
+        // Element SDK Implementation
+        async function onConfigChange(config) {
+            const appTitle = config.app_title || defaultConfig.app_title;
+            const welcomeText = config.welcome_text || defaultConfig.welcome_text;
+            const sortingTitle = config.sorting_title || defaultConfig.sorting_title;
+            const searchingTitle = config.searching_title || defaultConfig.searching_title;
+            
+            const backgroundColor = config.background_color || defaultConfig.background_color;
+            const surfaceColor = config.surface_color || defaultConfig.surface_color;
+            const textColor = config.text_color || defaultConfig.text_color;
+            const primaryActionColor = config.primary_action_color || defaultConfig.primary_action_color;
+            const secondaryActionColor = config.secondary_action_color || defaultConfig.secondary_action_color;
+            
+            const fontFamily = config.font_family || defaultConfig.font_family;
+            const fontSize = config.font_size || defaultConfig.font_size;
+            
+            // Update text content
+            document.getElementById('app-title').textContent = appTitle;
+            document.getElementById('welcome-text').textContent = welcomeText;
+            document.getElementById('sorting-title').textContent = sortingTitle;
+            document.getElementById('searching-title').textContent = searchingTitle;
+            
+            // Update colors
+            document.body.style.backgroundColor = backgroundColor;
+            
+            const surfaceElements = document.querySelectorAll('.bg-white');
+            surfaceElements.forEach(el => el.style.backgroundColor = surfaceColor);
+            
+            const textElements = document.querySelectorAll('.text-gray-800, .text-gray-700, .text-gray-900');
+            textElements.forEach(el => el.style.color = textColor);
+            
+            const primaryButtons = document.querySelectorAll('.bg-blue-500, .bg-green-500');
+            primaryButtons.forEach(el => el.style.backgroundColor = primaryActionColor);
+            
+            const secondaryButtons = document.querySelectorAll('.bg-gray-500');
+            secondaryButtons.forEach(el => el.style.backgroundColor = secondaryActionColor);
+            
+            // Update fonts
+            const baseFontStack = 'system-ui, -apple-system, sans-serif';
+            document.body.style.fontFamily = `${fontFamily}, ${baseFontStack}`;
+            document.body.style.fontSize = `${fontSize}px`;
+            
+            // Scale text proportionally
+            const headings = document.querySelectorAll('h1, h2, h3, h4');
+            headings.forEach(h => {
+                if (h.tagName === 'H1') h.style.fontSize = `${fontSize * 1.5}px`;
+                if (h.tagName === 'H2') h.style.fontSize = `${fontSize * 1.3}px`;
+                if (h.tagName === 'H3') h.style.fontSize = `${fontSize * 1.2}px`;
+                if (h.tagName === 'H4') h.style.fontSize = `${fontSize * 1.1}px`;
+            });
+            
+            const smallText = document.querySelectorAll('.text-sm, .text-xs');
+            smallText.forEach(el => {
+                if (el.classList.contains('text-xs')) {
+                    el.style.fontSize = `${fontSize * 0.75}px`;
+                } else {
+                    el.style.fontSize = `${fontSize * 0.875}px`;
+                }
+            });
+        }
+
+        function mapToCapabilities(config) {
+            return {
+                recolorables: [
+                    {
+                        get: () => config.background_color || defaultConfig.background_color,
+                        set: (value) => {
+                            config.background_color = value;
+                            if (window.elementSdk) window.elementSdk.setConfig({ background_color: value });
+                        }
+                    },
+                    {
+                        get: () => config.surface_color || defaultConfig.surface_color,
+                        set: (value) => {
+                            config.surface_color = value;
+                            if (window.elementSdk) window.elementSdk.setConfig({ surface_color: value });
+                        }
+                    },
+                    {
+                        get: () => config.text_color || defaultConfig.text_color,
+                        set: (value) => {
+                            config.text_color = value;
+                            if (window.elementSdk) window.elementSdk.setConfig({ text_color: value });
+                        }
+                    },
+                    {
+                        get: () => config.primary_action_color || defaultConfig.primary_action_color,
+                        set: (value) => {
+                            config.primary_action_color = value;
+                            if (window.elementSdk) window.elementSdk.setConfig({ primary_action_color: value });
+                        }
+                    },
+                    {
+                        get: () => config.secondary_action_color || defaultConfig.secondary_action_color,
+                        set: (value) => {
+                            config.secondary_action_color = value;
+                            if (window.elementSdk) window.elementSdk.setConfig({ secondary_action_color: value });
+                        }
+                    }
+                ],
+                borderables: [],
+                fontEditable: {
+                    get: () => config.font_family || defaultConfig.font_family,
+                    set: (value) => {
+                        config.font_family = value;
+                        if (window.elementSdk) window.elementSdk.setConfig({ font_family: value });
+                    }
+                },
+                fontSizeable: {
+                    get: () => config.font_size || defaultConfig.font_size,
+                    set: (value) => {
+                        config.font_size = value;
+                        if (window.elementSdk) window.elementSdk.setConfig({ font_size: value });
+                    }
+                }
+            };
+        }
+
+        function mapToEditPanelValues(config) {
+            return new Map([
+                ["app_title", config.app_title || defaultConfig.app_title],
+                ["welcome_text", config.welcome_text || defaultConfig.welcome_text],
+                ["sorting_title", config.sorting_title || defaultConfig.sorting_title],
+                ["searching_title", config.searching_title || defaultConfig.searching_title]
+            ]);
+        }
+
+        // Initialize SDKs
+        async function initializeApp() {
+            try {
+                if (window.dataSdk) {
+                    const initResult = await window.dataSdk.init(dataHandler);
+                    if (!initResult.isOk) {
+                        console.error("Failed to initialize data SDK");
+                    }
+                }
+
+                if (window.elementSdk) {
+                    await window.elementSdk.init({
+                        defaultConfig,
+                        onConfigChange,
+                        mapToCapabilities,
+                        mapToEditPanelValues
+                    });
+                }
+
+                // Initialize UI
+                parseArrayInput();
+                updateSpeedControl();
+                updateHistoryDisplay();
+            } catch (error) {
+                console.error("Initialization error:", error);
+            }
+        }
+
+        // Algorithm Selection
+        function selectAlgorithm(algorithm) {
+            currentAlgorithm = algorithm;
+            
+            // Reset button styles
+            document.querySelectorAll('[id^="btn-"]').forEach(btn => {
+                btn.classList.remove('border-blue-500', 'bg-blue-50', 'border-green-500', 'bg-green-50');
+                btn.classList.add('border-gray-200');
+            });
+            
+            // Highlight selected algorithm
+            const selectedBtn = document.getElementById(`btn-${algorithm}`);
+            if (selectedBtn) {
+                if (['linear', 'binary', 'jump', 'interpolation'].includes(algorithm)) {
+                    selectedBtn.classList.add('border-green-500', 'bg-green-50');
+                } else {
+                    selectedBtn.classList.add('border-blue-500', 'bg-blue-50');
+                }
+                selectedBtn.classList.remove('border-gray-200');
+            }
+            
+            // Show/hide search target input
+            const searchContainer = document.getElementById('search-target-container');
+            if (['linear', 'binary', 'jump', 'interpolation'].includes(algorithm)) {
+                searchContainer.classList.remove('hidden');
+            } else {
+                searchContainer.classList.add('hidden');
+            }
+            
+            updateAlgorithmInfo();
+            updateComplexityInfo();
+            updateAlgorithmDescription();
+            updateCodeDisplay();
+            resetVisualization();
+        }
+
+        // Array Management
+        function parseArrayInput() {
+            const input = document.getElementById('array-input').value;
+            const numbers = input.split(',').map(n => parseInt(n.trim())).filter(n => !isNaN(n));
+            
+            if (numbers.length === 0) {
+                showToast("Array tidak valid", "error");
+                return;
+            }
+            
+            visualizationArray = [...numbers];
+            originalArray = [...numbers];
+            renderVisualization();
+        }
+
+        function generateRandomArray() {
+            const size = 8 + Math.floor(Math.random() * 5); // 8-12 elements
+            const numbers = [];
+            
+            for (let i = 0; i < size; i++) {
+                numbers.push(Math.floor(Math.random() * 90) + 10);
+            }
+            
+            document.getElementById('array-input').value = numbers.join(', ');
+            parseArrayInput();
+        }
+
+        function renderVisualization() {
+            const container = document.getElementById('visualization-area');
+            container.innerHTML = '';
+            
+            if (visualizationArray.length === 0) return;
+            
+            const maxValue = Math.max(...visualizationArray);
+            const containerHeight = 250;
+            
+            visualizationArray.forEach((value, index) => {
+                const barHeight = (value / maxValue) * containerHeight;
+                const barWidth = Math.min(40, (container.clientWidth - (visualizationArray.length * 4)) / visualizationArray.length);
+                
+                const bar = document.createElement('div');
+                bar.className = 'algorithm-bar bg-blue-500';
+                bar.style.width = `${barWidth}px`;
+                bar.style.height = `${barHeight}px`;
+                bar.setAttribute('data-value', value);
+                bar.setAttribute('data-index', index);
+                
+                const label = document.createElement('div');
+                label.className = 'text-xs text-center mt-1 font-medium';
+                label.textContent = value;
+                
+                const wrapper = document.createElement('div');
+                wrapper.className = 'flex flex-col items-center';
+                wrapper.appendChild(bar);
+                wrapper.appendChild(label);
+                
+                container.appendChild(wrapper);
+            });
+        }
+
+        // Visualization Controls
+        async function startVisualization() {
+            if (!currentAlgorithm) {
+                showToast("Pilih algoritma terlebih dahulu", "warning");
+                return;
+            }
+            
+            if (isAnimating && !isPaused) return;
+            
+            if (!isPaused) {
+                parseArrayInput();
+                resetStatistics();
+            }
+            
+            isAnimating = true;
+            isPaused = false;
+            updateControlButtons();
+            
+            const startTime = performance.now();
+            
+            try {
+                switch (currentAlgorithm) {
+                    case 'bubble':
+                        await bubbleSort();
+                        break;
+                    case 'selection':
+                        await selectionSort();
+                        break;
+                    case 'insertion':
+                        await insertionSort();
+                        break;
+                    case 'merge':
+                        await mergeSort(0, visualizationArray.length - 1);
+                        break;
+                    case 'quick':
+                        await quickSort(0, visualizationArray.length - 1);
+                        break;
+                    case 'linear':
+                        await linearSearch();
+                        break;
+                    case 'binary':
+                        await binarySearch();
+                        break;
+                    case 'jump':
+                        await jumpSearch();
+                        break;
+                    case 'interpolation':
+                        await interpolationSearch();
+                        break;
+                }
+                
+                const endTime = performance.now();
+                statistics.executionTime = Math.round(endTime - startTime);
+                updateStatistics();
+                
+                if (!isPaused) {
+                    await saveSimulationHistory();
+                    showToast("Simulasi selesai!", "success");
+                }
+            } catch (error) {
+                if (error.message !== 'Paused') {
+                    showToast("Terjadi kesalahan dalam simulasi", "error");
+                }
+            }
+            
+            isAnimating = false;
+            updateControlButtons();
+        }
+
+        function pauseVisualization() {
+            isPaused = true;
+            updateControlButtons();
+        }
+
+        function resetVisualization() {
+            isAnimating = false;
+            isPaused = false;
+            currentStep = 0;
+            totalSteps = 0;
+            
+            visualizationArray = [...originalArray];
+            renderVisualization();
+            resetStatistics();
+            updateControlButtons();
+        }
+
+        function stepVisualization() {
+            // Implementation for step-by-step execution would go here
+            showToast("Step mode belum diimplementasi", "info");
+        }
+
+        function updateControlButtons() {
+            const startBtn = document.getElementById('start-btn');
+            const pauseBtn = document.getElementById('pause-btn');
+            const resetBtn = document.getElementById('reset-btn');
+            const stepBtn = document.getElementById('step-btn');
+            
+            startBtn.disabled = isAnimating && !isPaused;
+            pauseBtn.disabled = !isAnimating || isPaused;
+            resetBtn.disabled = false;
+            stepBtn.disabled = true; // For now
+        }
+
+        // Sorting Algorithms
+        async function bubbleSort() {
+            const n = visualizationArray.length;
+            
+            for (let i = 0; i < n - 1; i++) {
+                for (let j = 0; j < n - i - 1; j++) {
+                    if (isPaused) throw new Error('Paused');
+                    
+                    // Highlight comparison
+                    highlightBars([j, j + 1], 'comparing');
+                    statistics.comparisons++;
+                    updateStatistics();
+                    await sleep(animationSpeed);
+                    
+                    if (visualizationArray[j] > visualizationArray[j + 1]) {
+                        // Highlight swap
+                        highlightBars([j, j + 1], 'swapping');
+                        await sleep(animationSpeed / 2);
+                        
+                        // Perform swap
+                        [visualizationArray[j], visualizationArray[j + 1]] = [visualizationArray[j + 1], visualizationArray[j]];
+                        statistics.swaps++;
+                        updateStatistics();
+                        renderVisualization();
+                        await sleep(animationSpeed / 2);
+                    }
+                    
+                    // Remove highlight
+                    clearHighlights();
+                }
+                // Mark as sorted
+                highlightBars([n - i - 1], 'sorted');
+            }
+            highlightBars([0], 'sorted');
+        }
+
+        async function selectionSort() {
+            const n = visualizationArray.length;
+            
+            for (let i = 0; i < n - 1; i++) {
+                if (isPaused) throw new Error('Paused');
+                
+                let minIdx = i;
+                highlightBars([i], 'current');
+                
+                for (let j = i + 1; j < n; j++) {
+                    if (isPaused) throw new Error('Paused');
+                    
+                    highlightBars([j], 'comparing');
+                    statistics.comparisons++;
+                    updateStatistics();
+                    await sleep(animationSpeed);
+                    
+                    if (visualizationArray[j] < visualizationArray[minIdx]) {
+                        clearHighlights();
+                        minIdx = j;
+                        highlightBars([i], 'current');
+                        highlightBars([minIdx], 'comparing');
+                    } else {
+                        clearHighlights();
+                        highlightBars([i], 'current');
+                        highlightBars([minIdx], 'comparing');
+                    }
+                }
+                
+                if (minIdx !== i) {
+                    highlightBars([i, minIdx], 'swapping');
+                    await sleep(animationSpeed);
+                    
+                    [visualizationArray[i], visualizationArray[minIdx]] = [visualizationArray[minIdx], visualizationArray[i]];
+                    statistics.swaps++;
+                    updateStatistics();
+                    renderVisualization();
+                }
+                
+                highlightBars([i], 'sorted');
+                await sleep(animationSpeed);
+            }
+            highlightBars([n - 1], 'sorted');
+        }
+
+        async function insertionSort() {
+            const n = visualizationArray.length;
+            
+            for (let i = 1; i < n; i++) {
+                if (isPaused) throw new Error('Paused');
+                
+                let key = visualizationArray[i];
+                let j = i - 1;
+                
+                highlightBars([i], 'current');
+                await sleep(animationSpeed);
+                
+                while (j >= 0 && visualizationArray[j] > key) {
+                    if (isPaused) throw new Error('Paused');
+                    
+                    highlightBars([j, j + 1], 'comparing');
+                    statistics.comparisons++;
+                    updateStatistics();
+                    await sleep(animationSpeed);
+                    
+                    visualizationArray[j + 1] = visualizationArray[j];
+                    statistics.swaps++;
+                    updateStatistics();
+                    renderVisualization();
+                    j--;
+                }
+                
+                visualizationArray[j + 1] = key;
+                renderVisualization();
+                highlightBars([j + 1], 'sorted');
+                await sleep(animationSpeed);
+            }
+        }
+
+        async function mergeSort(left, right) {
+            if (left >= right) return;
+            if (isPaused) throw new Error('Paused');
+            
+            const mid = Math.floor((left + right) / 2);
+            
+            await mergeSort(left, mid);
+            await mergeSort(mid + 1, right);
+            await merge(left, mid, right);
+        }
+
+        async function merge(left, mid, right) {
+            const leftArr = visualizationArray.slice(left, mid + 1);
+            const rightArr = visualizationArray.slice(mid + 1, right + 1);
+            
+            let i = 0, j = 0, k = left;
+            
+            while (i < leftArr.length && j < rightArr.length) {
+                if (isPaused) throw new Error('Paused');
+                
+                highlightBars([k], 'comparing');
+                statistics.comparisons++;
+                updateStatistics();
+                await sleep(animationSpeed);
+                
+                if (leftArr[i] <= rightArr[j]) {
+                    visualizationArray[k] = leftArr[i];
+                    i++;
+                } else {
+                    visualizationArray[k] = rightArr[j];
+                    j++;
+                }
+                
+                statistics.swaps++;
+                updateStatistics();
+                renderVisualization();
+                highlightBars([k], 'sorted');
+                k++;
+                await sleep(animationSpeed);
+            }
+            
+            while (i < leftArr.length) {
+                if (isPaused) throw new Error('Paused');
+                visualizationArray[k] = leftArr[i];
+                statistics.swaps++;
+                updateStatistics();
+                renderVisualization();
+                highlightBars([k], 'sorted');
+                i++;
+                k++;
+                await sleep(animationSpeed);
+            }
+            
+            while (j < rightArr.length) {
+                if (isPaused) throw new Error('Paused');
+                visualizationArray[k] = rightArr[j];
+                statistics.swaps++;
+                updateStatistics();
+                renderVisualization();
+                highlightBars([k], 'sorted');
+                j++;
+                k++;
+                await sleep(animationSpeed);
+            }
+        }
+
+        async function quickSort(low, high) {
+            if (low < high) {
+                if (isPaused) throw new Error('Paused');
+                
+                const pi = await partition(low, high);
+                await quickSort(low, pi - 1);
+                await quickSort(pi + 1, high);
+            }
+        }
+
+        async function partition(low, high) {
+            const pivot = visualizationArray[high];
+            let i = low - 1;
+            
+            highlightBars([high], 'current');
+            
+            for (let j = low; j < high; j++) {
+                if (isPaused) throw new Error('Paused');
+                
+                highlightBars([j], 'comparing');
+                statistics.comparisons++;
+                updateStatistics();
+                await sleep(animationSpeed);
+                
+                if (visualizationArray[j] < pivot) {
+                    i++;
+                    if (i !== j) {
+                        highlightBars([i, j], 'swapping');
+                        await sleep(animationSpeed / 2);
+                        
+                        [visualizationArray[i], visualizationArray[j]] = [visualizationArray[j], visualizationArray[i]];
+                        statistics.swaps++;
+                        updateStatistics();
+                        renderVisualization();
+                        await sleep(animationSpeed / 2);
+                    }
+                }
+                clearHighlights();
+                highlightBars([high], 'current');
+            }
+            
+            highlightBars([i + 1, high], 'swapping');
+            await sleep(animationSpeed);
+            
+            [visualizationArray[i + 1], visualizationArray[high]] = [visualizationArray[high], visualizationArray[i + 1]];
+            statistics.swaps++;
+            updateStatistics();
+            renderVisualization();
+            
+            highlightBars([i + 1], 'sorted');
+            return i + 1;
+        }
+
+        // Searching Algorithms
+        async function linearSearch() {
+            const target = parseInt(document.getElementById('search-target').value);
+            if (isNaN(target)) {
+                showToast("Masukkan nilai yang valid untuk dicari", "warning");
+                return;
+            }
+            
+            for (let i = 0; i < visualizationArray.length; i++) {
+                if (isPaused) throw new Error('Paused');
+                
+                highlightBars([i], 'comparing');
+                statistics.comparisons++;
+                updateStatistics();
+                await sleep(animationSpeed);
+                
+                if (visualizationArray[i] === target) {
+                    highlightBars([i], 'sorted');
+                    showToast(`Nilai ${target} ditemukan di indeks ${i}!`, "success");
+                    return;
+                }
+                
+                clearHighlights();
+            }
+            
+            showToast(`Nilai ${target} tidak ditemukan`, "error");
+        }
+
+        async function binarySearch() {
+            // First sort the array
+            visualizationArray.sort((a, b) => a - b);
+            renderVisualization();
+            await sleep(animationSpeed);
+            
+            const target = parseInt(document.getElementById('search-target').value);
+            if (isNaN(target)) {
+                showToast("Masukkan nilai yang valid untuk dicari", "warning");
+                return;
+            }
+            
+            let left = 0;
+            let right = visualizationArray.length - 1;
+            
+            while (left <= right) {
+                if (isPaused) throw new Error('Paused');
+                
+                const mid = Math.floor((left + right) / 2);
+                
+                highlightBars([left, right], 'comparing');
+                highlightBars([mid], 'current');
+                statistics.comparisons++;
+                updateStatistics();
+                await sleep(animationSpeed);
+                
+                if (visualizationArray[mid] === target) {
+                    highlightBars([mid], 'sorted');
+                    showToast(`Nilai ${target} ditemukan di indeks ${mid}!`, "success");
+                    return;
+                } else if (visualizationArray[mid] < target) {
+                    left = mid + 1;
+                } else {
+                    right = mid - 1;
+                }
+                
+                clearHighlights();
+            }
+            
+            showToast(`Nilai ${target} tidak ditemukan`, "error");
+        }
+
+        async function jumpSearch() {
+            const target = parseInt(document.getElementById('search-target').value);
+            if (isNaN(target)) {
+                showToast("Masukkan nilai yang valid untuk dicari", "warning");
+                return;
+            }
+            
+            // First sort the array
+            visualizationArray.sort((a, b) => a - b);
+            renderVisualization();
+            await sleep(animationSpeed);
+            
+            const n = visualizationArray.length;
+            const step = Math.floor(Math.sqrt(n));
+            let prev = 0;
+            
+            // Jump search
+            while (visualizationArray[Math.min(step, n) - 1] < target) {
+                if (isPaused) throw new Error('Paused');
+                
+                highlightBars([Math.min(step, n) - 1], 'comparing');
+                statistics.comparisons++;
+                updateStatistics();
+                await sleep(animationSpeed);
+                
+                prev = step;
+                step += Math.floor(Math.sqrt(n));
+                
+                if (prev >= n) {
+                    showToast(`Nilai ${target} tidak ditemukan`, "error");
+                    return;
+                }
+                
+                clearHighlights();
+            }
+            
+            // Linear search in the identified block
+            while (visualizationArray[prev] < target) {
+                if (isPaused) throw new Error('Paused');
+                
+                highlightBars([prev], 'comparing');
+                statistics.comparisons++;
+                updateStatistics();
+                await sleep(animationSpeed);
+                
+                prev++;
+                
+                if (prev === Math.min(step, n)) {
+                    showToast(`Nilai ${target} tidak ditemukan`, "error");
+                    return;
+                }
+                
+                clearHighlights();
+            }
+            
+            if (visualizationArray[prev] === target) {
+                highlightBars([prev], 'sorted');
+                showToast(`Nilai ${target} ditemukan di indeks ${prev}!`, "success");
+            } else {
+                showToast(`Nilai ${target} tidak ditemukan`, "error");
+            }
+        }
+
+        async function interpolationSearch() {
+            const target = parseInt(document.getElementById('search-target').value);
+            if (isNaN(target)) {
+                showToast("Masukkan nilai yang valid untuk dicari", "warning");
+                return;
+            }
+            
+            // First sort the array
+            visualizationArray.sort((a, b) => a - b);
+            renderVisualization();
+            await sleep(animationSpeed);
+            
+            let low = 0;
+            let high = visualizationArray.length - 1;
+            
+            while (low <= high && target >= visualizationArray[low] && target <= visualizationArray[high]) {
+                if (isPaused) throw new Error('Paused');
+                
+                if (low === high) {
+                    if (visualizationArray[low] === target) {
+                        highlightBars([low], 'sorted');
+                        showToast(`Nilai ${target} ditemukan di indeks ${low}!`, "success");
+                    } else {
+                        showToast(`Nilai ${target} tidak ditemukan`, "error");
+                    }
+                    return;
+                }
+                
+                // Calculate position using interpolation formula
+                const pos = low + Math.floor(((target - visualizationArray[low]) / (visualizationArray[high] - visualizationArray[low])) * (high - low));
+                
+                highlightBars([low, high], 'comparing');
+                highlightBars([pos], 'current');
+                statistics.comparisons++;
+                updateStatistics();
+                await sleep(animationSpeed);
+                
+                if (visualizationArray[pos] === target) {
+                    highlightBars([pos], 'sorted');
+                    showToast(`Nilai ${target} ditemukan di indeks ${pos}!`, "success");
+                    return;
+                }
+                
+                if (visualizationArray[pos] < target) {
+                    low = pos + 1;
+                } else {
+                    high = pos - 1;
+                }
+                
+                clearHighlights();
+            }
+            
+            showToast(`Nilai ${target} tidak ditemukan`, "error");
+        }
+
+        // Visualization Helpers
+        function highlightBars(indices, className) {
+            const bars = document.querySelectorAll('.algorithm-bar');
+            indices.forEach(index => {
+                if (bars[index]) {
+                    bars[index].classList.add(className);
+                }
+            });
+        }
+
+        function clearHighlights() {
+            const bars = document.querySelectorAll('.algorithm-bar');
+            bars.forEach(bar => {
+                bar.classList.remove('comparing', 'swapping', 'sorted', 'current');
+            });
+        }
+
+        // Statistics Management
+        function resetStatistics() {
+            statistics = {
+                comparisons: 0,
+                swaps: 0,
+                executionTime: 0
+            };
+            updateStatistics();
+        }
+
+        function updateStatistics() {
+            document.getElementById('comparisons-count').textContent = statistics.comparisons;
+            document.getElementById('swaps-count').textContent = statistics.swaps;
+            document.getElementById('execution-time').textContent = statistics.executionTime;
+        }
+
+        // Information Updates
+        function updateAlgorithmInfo() {
+            const info = document.getElementById('algorithm-info');
+            const algorithmNames = {
+                bubble: 'Bubble Sort',
+                selection: 'Selection Sort',
+                insertion: 'Insertion Sort',
+                merge: 'Merge Sort',
+                quick: 'Quick Sort',
+                linear: 'Linear Search',
+                binary: 'Binary Search',
+                jump: 'Jump Search',
+                interpolation: 'Interpolation Search'
+            };
+            
+            info.textContent = algorithmNames[currentAlgorithm] || 'Pilih algoritma untuk memulai';
+        }
+
+        function updateComplexityInfo() {
+            const complexityInfo = document.getElementById('complexity-info');
+            const complexities = {
+                bubble: {
+                    best: 'O(n)',
+                    average: 'O(n²)',
+                    worst: 'O(n²)',
+                    space: 'O(1)'
+                },
+                selection: {
+                    best: 'O(n²)',
+                    average: 'O(n²)',
+                    worst: 'O(n²)',
+                    space: 'O(1)'
+                },
+                insertion: {
+                    best: 'O(n)',
+                    average: 'O(n²)',
+                    worst: 'O(n²)',
+                    space: 'O(1)'
+                },
+                merge: {
+                    best: 'O(n log n)',
+                    average: 'O(n log n)',
+                    worst: 'O(n log n)',
+                    space: 'O(n)'
+                },
+                quick: {
+                    best: 'O(n log n)',
+                    average: 'O(n log n)',
+                    worst: 'O(n²)',
+                    space: 'O(log n)'
+                },
+                linear: {
+                    best: 'O(1)',
+                    average: 'O(n)',
+                    worst: 'O(n)',
+                    space: 'O(1)'
+                },
+                binary: {
+                    best: 'O(1)',
+                    average: 'O(log n)',
+                    worst: 'O(log n)',
+                    space: 'O(1)'
+                },
+                jump: {
+                    best: 'O(1)',
+                    average: 'O(√n)',
+                    worst: 'O(√n)',
+                    space: 'O(1)'
+                },
+                interpolation: {
+                    best: 'O(1)',
+                    average: 'O(log log n)',
+                    worst: 'O(n)',
+                    space: 'O(1)'
+                }
+            };
+            
+            if (currentAlgorithm && complexities[currentAlgorithm]) {
+                const complexity = complexities[currentAlgorithm];
+                complexityInfo.innerHTML = `
+                    <div><strong>Best:</strong> ${complexity.best}</div>
+                    <div><strong>Average:</strong> ${complexity.average}</div>
+                    <div><strong>Worst:</strong> ${complexity.worst}</div>
+                    <div><strong>Space:</strong> ${complexity.space}</div>
+                `;
+            } else {
+                complexityInfo.innerHTML = '<div>Pilih algoritma untuk melihat kompleksitas</div>';
+            }
+        }
+
+        function updateAlgorithmDescription() {
+            const description = document.getElementById('algorithm-description');
+            const descriptions = {
+                bubble: 'Bubble Sort membandingkan elemen yang berdekatan dan menukarnya jika urutannya salah. Proses ini diulang hingga tidak ada lagi pertukaran yang diperlukan.',
+                selection: 'Selection Sort mencari elemen terkecil dalam array dan menukarnya dengan elemen pertama, kemudian mencari elemen terkecil kedua dan menukarnya dengan elemen kedua, dan seterusnya.',
+                insertion: 'Insertion Sort membangun array yang terurut satu elemen pada satu waktu dengan menyisipkan setiap elemen baru ke posisi yang tepat dalam bagian yang sudah terurut.',
+                merge: 'Merge Sort menggunakan pendekatan divide-and-conquer dengan membagi array menjadi dua bagian, mengurutkan masing-masing bagian, kemudian menggabungkannya kembali.',
+                quick: 'Quick Sort memilih elemen pivot dan mempartisi array sehingga elemen yang lebih kecil dari pivot berada di sebelah kiri dan yang lebih besar di sebelah kanan.',
+                linear: 'Linear Search memeriksa setiap elemen dalam array secara berurutan dari awal hingga akhir sampai menemukan elemen yang dicari.',
+                binary: 'Binary Search bekerja pada array yang sudah terurut dengan membagi ruang pencarian menjadi dua bagian pada setiap iterasi.',
+                jump: 'Jump Search melompati beberapa elemen dengan langkah tetap, kemudian melakukan pencarian linear dalam blok yang tepat.',
+                interpolation: 'Interpolation Search menggunakan interpolasi untuk memperkirakan posisi elemen yang dicari berdasarkan nilai dan distribusi data.'
+            };
+            
+            description.textContent = descriptions[currentAlgorithm] || 'Pilih algoritma untuk melihat penjelasan cara kerjanya.';
+        }
+
+        function updateCodeDisplay() {
+            const codeContent = document.getElementById('code-content');
+            const language = document.getElementById('language-select').value;
+            
+            const codes = {
+                python: {
+                    bubble: `def bubble_sort(arr):
+    n = len(arr)
+    for i in range(n):
+        for j in range(0, n-i-1):
+            if arr[j] > arr[j+1]:
+                arr[j], arr[j+1] = arr[j+1], arr[j]
+    return arr`,
+                    selection: `def selection_sort(arr):
+    n = len(arr)
+    for i in range(n):
+        min_idx = i
+        for j in range(i+1, n):
+            if arr[j] < arr[min_idx]:
+                min_idx = j
+        arr[i], arr[min_idx] = arr[min_idx], arr[i]
+    return arr`,
+                    insertion: `def insertion_sort(arr):
+    for i in range(1, len(arr)):
+        key = arr[i]
+        j = i - 1
+        while j >= 0 and arr[j] > key:
+            arr[j + 1] = arr[j]
+            j -= 1
+        arr[j + 1] = key
+    return arr`,
+                    linear: `def linear_search(arr, target):
+    for i in range(len(arr)):
+        if arr[i] == target:
+            return i
+    return -1`,
+                    binary: `def binary_search(arr, target):
+    left, right = 0, len(arr) - 1
+    while left <= right:
+        mid = (left + right) // 2
+        if arr[mid] == target:
+            return mid
+        elif arr[mid] < target:
+            left = mid + 1
+        else:
+            right = mid - 1
+    return -1`
+                },
+                javascript: {
+                    bubble: `function bubbleSort(arr) {
+    const n = arr.length;
+    for (let i = 0; i < n; i++) {
+        for (let j = 0; j < n - i - 1; j++) {
+            if (arr[j] > arr[j + 1]) {
+                [arr[j], arr[j + 1]] = [arr[j + 1], arr[j]];
+            }
+        }
+    }
+    return arr;
+}`,
+                    selection: `function selectionSort(arr) {
+    const n = arr.length;
+    for (let i = 0; i < n; i++) {
+        let minIdx = i;
+        for (let j = i + 1; j < n; j++) {
+            if (arr[j] < arr[minIdx]) {
+                minIdx = j;
+            }
+        }
+        [arr[i], arr[minIdx]] = [arr[minIdx], arr[i]];
+    }
+    return arr;
+}`,
+                    insertion: `function insertionSort(arr) {
+    for (let i = 1; i < arr.length; i++) {
+        let key = arr[i];
+        let j = i - 1;
+        while (j >= 0 && arr[j] > key) {
+            arr[j + 1] = arr[j];
+            j--;
+        }
+        arr[j + 1] = key;
+    }
+    return arr;
+}`,
+                    linear: `function linearSearch(arr, target) {
+    for (let i = 0; i < arr.length; i++) {
+        if (arr[i] === target) {
+            return i;
+        }
+    }
+    return -1;
+}`,
+                    binary: `function binarySearch(arr, target) {
+    let left = 0, right = arr.length - 1;
+    while (left <= right) {
+        const mid = Math.floor((left + right) / 2);
+        if (arr[mid] === target) {
+            return mid;
+        } else if (arr[mid] < target) {
+            left = mid + 1;
+        } else {
+            right = mid - 1;
+        }
+    }
+    return -1;
+}`
+                }
+            };
+            
+            if (currentAlgorithm && codes[language] && codes[language][currentAlgorithm]) {
+                codeContent.textContent = codes[language][currentAlgorithm];
+            } else {
+                codeContent.textContent = '// Pilih algoritma untuk melihat implementasi kode';
+            }
+        }
+
+        // Speed Control
+        function updateSpeedControl() {
+            const slider = document.getElementById('speed-slider');
+            const valueDisplay = document.getElementById('speed-value');
+            
+            slider.addEventListener('input', () => {
+                const speed = parseInt(slider.value);
+                valueDisplay.textContent = speed;
+                animationSpeed = 1100 - (speed * 100); // Convert to milliseconds
+            });
+        }
+
+        // History Management
+        async function saveSimulationHistory() {
+            if (window.dataSdk && currentData.length < 999) {
+                const historyData = {
+                    id: Date.now().toString(),
+                    algorithm: currentAlgorithm,
+                    array_data: originalArray.join(','),
+                    execution_time: statistics.executionTime,
+                    comparisons: statistics.comparisons,
+                    swaps: statistics.swaps,
+                    timestamp: new Date().toISOString()
+                };
+                
+                const result = await window.dataSdk.create(historyData);
+                if (!result.isOk) {
+                    showToast("Gagal menyimpan riwayat simulasi", "error");
+                }
+            } else if (currentData.length >= 999) {
+                showToast("Batas maksimum 999 riwayat tercapai", "warning");
+            }
+        }
+
+        function updateHistoryDisplay() {
+            const historyList = document.getElementById('history-list');
+            
+            if (currentData.length === 0) {
+                historyList.innerHTML = `
+                    <div class="text-center py-8">
+                        <div class="text-4xl mb-2">📊</div>
+                        <p class="text-gray-500">Belum ada riwayat simulasi</p>
+                        <p class="text-sm text-gray-400">Jalankan algoritma untuk melihat riwayat</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            const sortedHistory = currentData
+                .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
+                .slice(0, 10); // Show last 10 simulations
+            
+            historyList.innerHTML = sortedHistory.map(item => {
+                const date = new Date(item.timestamp);
+                const timeAgo = getTimeAgo(date);
+                const algorithmNames = {
+                    bubble: 'Bubble Sort',
+                    selection: 'Selection Sort',
+                    insertion: 'Insertion Sort',
+                    merge: 'Merge Sort',
+                    quick: 'Quick Sort',
+                    linear: 'Linear Search',
+                    binary: 'Binary Search',
+                    jump: 'Jump Search',
+                    interpolation: 'Interpolation Search'
+                };
+                
+                return `
+                    <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                        <div class="flex-1">
+                            <div class="flex items-center space-x-2">
+                                <span class="font-medium">${algorithmNames[item.algorithm] || item.algorithm}</span>
+                                <span class="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">${item.array_data.split(',').length} elemen</span>
+                            </div>
+                            <div class="text-sm text-gray-600 mt-1">
+                                ${item.comparisons} perbandingan • ${item.swaps} pertukaran • ${item.execution_time}ms
+                            </div>
+                            <div class="text-xs text-gray-500">${timeAgo}</div>
+                        </div>
+                        <button onclick="deleteHistoryItem('${item.id}')" class="text-red-500 hover:text-red-700 p-1">
+                            🗑️
+                        </button>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        async function deleteHistoryItem(itemId) {
+            const item = currentData.find(data => data.id === itemId);
+            if (item && window.dataSdk) {
+                const result = await window.dataSdk.delete(item);
+                if (result.isOk) {
+                    showToast("Riwayat dihapus", "success");
+                } else {
+                    showToast("Gagal menghapus riwayat", "error");
+                }
+            }
+        }
+
+        async function clearHistory() {
+            if (currentData.length === 0) {
+                showToast("Tidak ada riwayat untuk dihapus", "info");
+                return;
+            }
+            
+            // Create a custom confirmation dialog
+            const confirmDiv = document.createElement('div');
+            confirmDiv.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
+            confirmDiv.innerHTML = `
+                <div class="bg-white rounded-lg p-6 max-w-sm mx-4">
+                    <h3 class="text-lg font-semibold mb-4">Konfirmasi Hapus</h3>
+                    <p class="text-gray-600 mb-6">Yakin ingin menghapus semua riwayat simulasi?</p>
+                    <div class="flex space-x-3">
+                        <button id="confirm-delete" class="flex-1 bg-red-500 hover:bg-red-600 text-white py-2 px-4 rounded-lg transition-colors">
+                            Hapus Semua
+                        </button>
+                        <button id="cancel-delete" class="flex-1 bg-gray-500 hover:bg-gray-600 text-white py-2 px-4 rounded-lg transition-colors">
+                            Batal
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(confirmDiv);
+            
+            document.getElementById('confirm-delete').onclick = async () => {
+                document.body.removeChild(confirmDiv);
+                
+                // Delete all items
+                for (const item of currentData) {
+                    if (window.dataSdk) {
+                        await window.dataSdk.delete(item);
+                    }
+                }
+                showToast("Semua riwayat telah dihapus", "success");
+            };
+            
+            document.getElementById('cancel-delete').onclick = () => {
+                document.body.removeChild(confirmDiv);
+            };
+        }
+
+        function updateSimulationCount() {
+            document.getElementById('simulation-count').textContent = currentData.length;
+        }
+
+        // Utility Functions
+        function sleep(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+
+        function getTimeAgo(date) {
+            const now = new Date();
+            const diffInSeconds = Math.floor((now - date) / 1000);
+            
+            if (diffInSeconds < 60) return 'Baru saja';
+            if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)} menit lalu`;
+            if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)} jam lalu`;
+            return `${Math.floor(diffInSeconds / 86400)} hari lalu`;
+        }
+
+        function showToast(message, type = 'info') {
+            const toast = document.getElementById('toast');
+            const toastMessage = document.getElementById('toast-message');
+            
+            toastMessage.textContent = message;
+            
+            // Set color based on type
+            toast.className = 'fixed bottom-4 right-4 px-6 py-3 rounded-lg shadow-lg transform transition-transform duration-300 z-50';
+            switch (type) {
+                case 'success':
+                    toast.classList.add('bg-green-500', 'text-white');
+                    break;
+                case 'error':
+                    toast.classList.add('bg-red-500', 'text-white');
+                    break;
+                case 'warning':
+                    toast.classList.add('bg-yellow-500', 'text-white');
+                    break;
+                default:
+                    toast.classList.add('bg-blue-500', 'text-white');
+            }
+            
+            // Show toast
+            toast.style.transform = 'translateY(0)';
+            
+            // Hide after 3 seconds
+            setTimeout(() => {
+                toast.style.transform = 'translateY(100%)';
+            }, 3000);
+        }
+
+        // Event Listeners
+        document.getElementById('language-select').addEventListener('change', updateCodeDisplay);
+        document.getElementById('array-input').addEventListener('input', parseArrayInput);
+
+        // Initialize app when DOM is loaded
+        document.addEventListener('DOMContentLoaded', initializeApp);
+    </script>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'996f08e29700fda4',t:'MTc2MTg3MDUzMS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
